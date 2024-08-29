@@ -1,0 +1,16 @@
+<!-- templates/spotify_api/create_playlist.html -->
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Create a New Playlist</h2>
+  <form method="post">
+    {% csrf_token %}
+    <label for="playlist_name">Playlist Name:</label>
+    <input type="text" id="playlist_name" name="playlist_name" required>
+    
+    <label for="public">Public:</label>
+    <input type="checkbox" id="public" name="public">
+    
+    <button type="submit">Create Playlist</button>
+  </form>
+{% endblock %}

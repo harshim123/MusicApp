@@ -1,0 +1,13 @@
+<!-- spotify_songs.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Spotify Songs</h1>
+  <ul>
+    {% for song in songs %}
+      <li>
+        {{ song.name }} - {{ song.artist }}
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

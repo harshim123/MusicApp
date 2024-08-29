@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Albums - Spotify Clone</title>
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #FFFFFF;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        #album-list {
+            list-style-type: none;
+            padding: 0;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        #album-list li {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #282828;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        #album-list li:hover {
+            background-color: #333333;
+        }
+
+        #album-list img {
+            width: 64px;
+            height: 64px;
+            margin-right: 15px;
+            border-radius: 4px;
+        }
+
+        #album-list h2 {
+            font-size: 18px;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        #album-list p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #b3b3b3;
+        }
+
+        #album-list button {
+            background-color: #1DB954;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        #album-list button:hover {
+            background-color: #1ed760;
+        }
+
+        #spotify-player {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Your Saved Albums</h1>
+    <ul id="album-list">
+        {% for album in albums %}
+            <li>
+                <img src="{{ album.album.images.0.url }}" alt="{{ album.album.name }} cover">
+                <div>
+                    <h2>{{ album.album.name }}</h2>
+                    <p>Artist: {{ album.album.artists.0.name }}</p>
+                    <p>Release Date: {{ album.album.release_date }}</p>
+                </div>
+                <form method="post" action="{% url 'play_album' %}">
+                    {% csrf_token%}
+                    <input type="hidden" name="album_uri" value="{{ album.album.uri }}">
+                    <button type="submit">Play</button>
+                  </form>
+            </li>
+        {% empty %}
+            <p>You have no saved albums.</p>
+        {% endfor %}
+    </ul>
+
+    <div id="spotify-player"></div>
+
+    <script>
+        let player;
+
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            const token = '{{ request.session.spotify_token }}';
+
+            player = new Spotify.Player({
+                name: 'Spotify Clone Web Player',
+                getOAuthToken: cb => { cb(token); }
+            });
+
+            player.addListener('ready', ({ device_id }) => {
+                console.log('Ready with Device ID', device_id);
+            });
+
+            player.addListener('not_ready', ({ device_id }) => {
+                console.log('Device ID has gone offline', device_id);
+            });
+
+            player.connect();
+        };
+
+        function playAlbum(albumId) {
+            fetch(`https://api.spotify.com/v1/albums/${albumId}/tracks`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer {{ request.session.spotify_token }}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const trackUris = data.items.map(track => track.uri);
+                player.resume().then(() => {
+                    player.play({
+                        uris: trackUris
+                    }).then(() => {
+                        console.log('Playback started');
+                    });
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
+
+
+{% endblock %}

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+
+{% block content %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Clone - Search Results</title>
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #fff;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        #search-results {
+            list-style-type: none;
+            padding: 0;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        #search-results li {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #282828;
+            border-radius: 8px;
+        }
+
+        #search-results img {
+            width: 64px;
+            height: 64px;
+            margin-right: 15px;
+            border-radius: 4px;
+        }
+
+        #search-results h2 {
+            font-size: 18px;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        #search-results p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #b3b3b3;
+        }
+
+        #search-results button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            align-items: right;
+            justify-content: right;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #search-results button:hover {
+            background-color: #1ed760;
+        }
+
+        #spotify-player {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Search Results for "{{ request.GET.q }}"</h1>
+
+    <ul id="search-results">
+        {% for item in results %}
+            <li>
+                {% if item.images %}
+                    <img src="{{ item.images.0.url }}" alt="{{ item.name }} cover">
+                {% endif %}
+                <div>
+                    <h2>{{ item.name }}</h2>
+                    {% if item.artists %}
+                        <p>Artist: {{ item.artists.0.name }}</p>
+                    {% endif %}
+                    {% if item.album %}
+                        <p>Album: {{ item.album.name }}</p>
+                    {% endif %}
+                </div>
+                <form method="post" action="{% url 'play_album' %}">
+                    {% csrf_token%}
+                    <input type="hidden" name="album_uri" value="{{ album.album.uri }}">
+                    <button type="submit">Play</button>
+                  </form>
+            </li>
+        {% empty %}
+            <p>No results found.</p>
+        {% endfor %}
+    </ul>
+
+    <div id="spotify-player"></div>
+
+    <script>
+        let player;
+
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            const token = '{{ request.session.spotify_token }}';
+
+            player = new Spotify.Player({
+                name: 'Web Playback SDK',
+                getOAuthToken: cb => { cb(token); }
+            });
+
+            player.addListener('ready', ({ device_id }) => {
+                console.log('Ready with Device ID', device_id);
+            });
+
+            player.connect();
+        };
+
+        function playItem(uri) {
+            player.resume().then(() => {
+                player.play({
+                    uris: [uri]
+                }).then(() => {
+                    console.log('Playback started');
+                });
+            }).catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
+
+{% endblock %}

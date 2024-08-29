@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6" style="padding-top: 25px;">
+            <img src="/media/{{song.image}}" alt="" height="450px" width="450px">
+        </div>
+        <div class="col-md-6" style="padding-top: 10px;">
+            <h2 style="font-weight: 550; color: green;">Title: {{song.name}}</h2>
+            <h5 style="font-weight: 550;">Category: {{song.tags}}</h5>
+            <h5 style="font-weight: 550;">Movie: {{song.movie}}</h5>
+            <h5 style="font-weight: 550;">Singer: {{song.singer}}</h5>
+            
+            <audio id="audio-player" controls>
+                <source src="/media/{{song.song}}" type="audio/mp3">
+            </audio>
+            <div style="padding-top: 10px;">
+                <button class="btn btn-outline-danger" onclick="togglePlayPause(this)">
+                    <span class="play-icon">Play</span>
+                    <span class="pause-icon" style="display: none;">Pause</span>
+                </button>
+            </div>
+            
+            <input type="hidden" name="song_id" value="{{song.song_id}}">
+            <a href="/media/{{song.song}}"><button class="btn btn-outline-danger">Download Song</button></a>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePlayPause(button) {
+    var audio = document.getElementById('audio-player');
+    var playIcon = button.querySelector('.play-icon');
+    var pauseIcon = button.querySelector('.pause-icon');
+
+    if (audio.paused) {
+        audio.play();
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'inline';
+    } else {
+        audio.pause();
+        playIcon.style.display = 'inline';
+        pauseIcon.style.display = 'none';
+    }
+}
+</script>
+
+{% endblock %}
